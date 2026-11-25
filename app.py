@@ -26,7 +26,7 @@ import yt_dlp
 from flask import Flask, Response, abort, jsonify, render_template, request, send_file
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder=".")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)  # lấy IP thật khi chạy sau Nginx/Cloudflare
 
 # ---------------- Cấu hình ----------------
