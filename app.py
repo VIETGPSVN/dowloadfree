@@ -354,6 +354,53 @@ def try_gallerydl(url, d: Path):
         return False, str(e)
 
 
+def probe_codecs(path: Path):
+    r = subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "stream=codec_type,codec_name,pix_fmt",
+         "-of", "json", str(path)],
+        capture_output=True, text=True, timeout=30,
+    )
+    data = json.loads(r.stdout or "{}")
+    v = a = pix = None
+    for st in data.get("streams", []):
+        if st.get("codec_type") == "video" and v is None:
+            v, pix = st.get("codec_name"), st.get("pix_fmt")
+        elif st.get("codec_type") == "audio" and a is None:
+            a = st.get("codec_name")
+    return v, a, pix
+
+
+def make_compatible(path: Path) -> Path:
+    """Chuẩn hoá video về MP4 (H.264 + AAC, yuv420p, faststart, bỏ metadata) để đăng được lên TikTok/điện thoại.
+    Nếu đã đúng chuẩn thì chỉ đóng gói lại (rất nhanh). Lỗi bất kỳ -> giữ nguyên file gốc."""
+    if not HAS_FFMPEG or path.suffix.lower() not in (".mp4", ".mkv", ".webm", ".mov", ".m4v"):
+        return path
+    out = path.with_name(path.stem + "_std.mp4")
+    try:
+        v, a, pix = probe_codecs(path)
+        if v is None:
+            return path
+        ok_video = v == "h264" and pix in (None, "yuv420p")
+        ok_audio = a in (None, "aac")
+        cmd = ["ffmpeg", "-y", "-v", "error", "-i", str(path),
+               "-map", "0:v:0", "-map", "0:a:0?", "-map_metadata", "-1"]
+        if ok_video:
+            cmd += ["-c:v", "copy"]
+        else:
+            cmd += ["-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-pix_fmt", "yuv420p",
+                    "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2"]
+        cmd += ["-c:a", "copy"] if ok_audio else ["-c:a", "aac", "-b:a", "128k"]
+        cmd += ["-movflags", "+faststart", str(out)]
+        r = subprocess.run(cmd, capture_output=True, timeout=240)
+        if r.returncode == 0 and out.exists() and out.stat().st_size > 0:
+            path.unlink(missing_ok=True)
+            return out
+    except Exception:  # noqa: BLE001
+        pass
+    out.unlink(missing_ok=True)
+    return path
+
+
 def run_job(job_id, rec, choice):
     job = jobs[job_id]
     d: Path = job["dir"]
@@ -364,6 +411,9 @@ def run_job(job_id, rec, choice):
                 try_gallerydl(rec["url"], d)
             else:
                 try_ytdlp(rec["url"], d, choice, rec["multi"])
+            if choice != "audio" and rec["kind"] == "ytdlp":
+                for f in [f for f in d.rglob("*") if f.is_file()]:
+                    make_compatible(f)
             files = [f for f in d.rglob("*") if f.is_file()]
             if not files:
                 raise RuntimeError(
@@ -449,9 +499,7 @@ def sitemap():
     return Response(xml, mimetype="application/xml")
 
 
-@app.get("/googlec4e115eedc464aff.html")
-def google_verify():
-    return Response("google-site-verification: googlec4e115eedc464aff.html", mimetype="text/html")
+@app.after_request
 def security_headers(resp):
     resp.headers.setdefault("X-Content-Type-Options", "nosniff")
     resp.headers.setdefault("X-Frame-Options", "DENY")
