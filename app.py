@@ -318,6 +318,7 @@ def try_ytdlp(url, d: Path, choice, multi):
         "retries": 2,
         "max_filesize": MAX_MB * 1024 * 1024,
         "match_filter": yt_dlp.utils.match_filter_func(f"duration <=? {MAX_DURATION}"),
+        "format_sort": ["vcodec:h264", "res", "acodec:m4a"],
     }
     if multi:
         opts["playlistend"] = 10
