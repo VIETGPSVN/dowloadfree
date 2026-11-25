@@ -448,7 +448,9 @@ def sitemap():
     return Response(xml, mimetype="application/xml")
 
 
-@app.after_request
+@app.get("/googlec4e115eedc464aff.html")
+def google_verify():
+    return Response("google-site-verification: googlec4e115eedc464aff.html", mimetype="text/html")
 def security_headers(resp):
     resp.headers.setdefault("X-Content-Type-Options", "nosniff")
     resp.headers.setdefault("X-Frame-Options", "DENY")
