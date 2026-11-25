@@ -1,0 +1,6 @@
+# Danh sách link/tài khoản bị chặn theo yêu cầu của chủ sở hữu (mỗi dòng một mục).
+# Có hiệu lực ngay, không cần khởi động lại. Dòng bắt đầu bằng # là ghi chú.
+# Ví dụ:
+#   https://www.tiktok.com/@tenkenh            (chặn cả tài khoản)
+#   https://www.instagram.com/p/AbCdEfG/       (chặn một bài)
+#   https://www.facebook.com/watch/?v=1234567  (chặn một video Facebook)
