@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Liên hệ | {{ SITE_NAME }}{% endblock %}
+{% block desc %}Liên hệ {{ SITE_NAME }}: hỗ trợ kỹ thuật, báo lỗi, góp ý và hợp tác.{% endblock %}
+{% block content %}
+<article class="legal">
+<h1>Liên hệ</h1>
+<p class="sub">Chúng tôi đọc mọi email và cố gắng phản hồi trong vòng 1–3 ngày làm việc.</p>
+
+<div class="card">
+  <p><b>Email:</b> <a href="mailto:{{ CONTACT_EMAIL }}">{{ CONTACT_EMAIL }}</a></p>
+</div>
+
+<h2>Bạn muốn liên hệ về việc gì?</h2>
+<ul>
+  <li><b>Báo lỗi, hỗ trợ kỹ thuật:</b> gửi kèm link bạn đã thử (công khai), nền tảng (Facebook, Instagram, TikTok), thiết bị và trình duyệt, cùng nội dung thông báo lỗi.</li>
+  <li><b>Chủ sở hữu nội dung muốn chặn link:</b> vui lòng dùng trang <a href="/go-noi-dung">Yêu cầu gỡ nội dung</a> để được xử lý nhanh hơn.</li>
+  <li><b>Câu hỏi về quyền riêng tư:</b> xem <a href="/chinh-sach-rieng-tu">Chính sách riêng tư</a> hoặc gửi email trực tiếp.</li>
+  <li><b>Góp ý, hợp tác:</b> gửi email với tiêu đề rõ ràng.</li>
+</ul>
+
+<p>Lưu ý: chúng tôi không thể giúp tải nội dung riêng tư hoặc nội dung bạn không có quyền xem.</p>
+</article>
+{% endblock %}

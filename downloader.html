@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block title %}{{ p.h1 }} miễn phí | {{ SITE_NAME }}{% endblock %}
+{% block desc %}{{ p.meta }}{% endblock %}
+
+{% block content %}
+<h1>{{ p.h1 }}</h1>
+<p class="sub">{{ p.intro }}</p>
+
+<div class="card">
+  <!-- Bước 1: dán link và phân tích -->
+  <section id="step1">
+    <input id="url" type="url" placeholder="{{ p.placeholder }}" autocomplete="off">
+    <label class="agree">
+      <input id="agree" type="checkbox">
+      <span>Tôi cam kết chỉ tải nội dung của chính mình hoặc nội dung tôi được phép sử dụng, và đã đọc <a href="/dieu-khoan" target="_blank">Điều khoản sử dụng</a>.</span>
+    </label>
+    {% if ts_site_key %}
+    <div class="cf-turnstile" data-sitekey="{{ ts_site_key }}"></div>
+    {% endif %}
+    <div style="height:14px"></div>
+    <button id="analyze">Phân tích link</button>
+  </section>
+
+  <!-- Bước 2: xem trước và chọn chất lượng -->
+  <section id="step2" hidden>
+    <div class="preview">
+      <img id="thumb" alt="" hidden>
+      <div>
+        <div class="t" id="title"></div>
+        <div class="m" id="meta"></div>
+      </div>
+    </div>
+    <div class="opts" id="opts"></div>
+    <button id="start">Tải xuống</button>
+    <button id="again" class="ghost">Tải link khác</button>
+  </section>
+
+  <div id="msg" class="info" role="status"></div>
+  <div id="result"></div>
+</div>
+
+<p class="sub" style="margin-top:12px;font-size:.9rem">
+  Giới hạn: tối đa {{ max_min }} phút, {{ max_mb }} MB mỗi lần. Chỉ tải được nội dung công khai.
+</p>
+
+<h2>Cách tải {{ 'video, ảnh' if key == 'all' else p.name }}</h2>
+<ol>
+  <li>Mở bài đăng cần tải, bấm <b>Chia sẻ</b> rồi <b>Sao chép liên kết</b>.</li>
+  <li>Dán link vào ô phía trên, tick ô cam kết, hoàn thành xác minh rồi bấm <b>Phân tích link</b>.</li>
+  <li>Xem trước nội dung, chọn chất lượng và bấm <b>Tải xuống</b>.</li>
+</ol>
+
+<h2>Câu hỏi thường gặp</h2>
+<details><summary>Dịch vụ này có miễn phí không?</summary>
+  <p>Có, bạn không cần tạo tài khoản hay cài phần mềm.</p></details>
+<details><summary>Tại sao link của tôi không tải được?</summary>
+  <p>Thường do bài đăng ở chế độ riêng tư, đã bị xoá, yêu cầu đăng nhập, quá dài hoặc quá nặng so với giới hạn. Chúng tôi chỉ hỗ trợ nội dung công khai.</p></details>
+<details><summary>File được lưu ở đâu?</summary>
+  <p>Chúng tôi không lưu trữ nội dung. File chỉ tồn tại tạm thời để bạn tải về và tự động bị xoá sau 15 phút.</p></details>
+<details><summary>Tôi có được đăng lại nội dung đã tải không?</summary>
+  <p>Chỉ khi bạn là chủ sở hữu hoặc được chủ sở hữu cho phép. Xem thêm <a href="/dieu-khoan">Điều khoản sử dụng</a>. Nếu bạn là chủ sở hữu và muốn chặn nội dung của mình, hãy dùng trang <a href="/go-noi-dung">Yêu cầu gỡ nội dung</a>.</p></details>
+{% endblock %}
+
+{% block scripts %}
+{% if ts_site_key %}
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+{% endif %}
+<script>
+const $ = id => document.getElementById(id);
+const PLATFORM = "{{ key }}";
+const USE_TS = {{ 'true' if ts_site_key else 'false' }};
+let analysisId = null;
+
+function msg(text, cls) { $("msg").className = cls || "info"; $("msg").textContent = text || ""; }
+function fmtDur(s) {
+  if (!s) return "";
+  s = Math.round(s);
+  return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+}
+function resetTs() { if (USE_TS && window.turnstile) { try { turnstile.reset(); } catch (e) {} } }
+function resetAll() {
+  analysisId = null;
+  $("step1").hidden = false; $("step2").hidden = true;
+  $("result").textContent = ""; msg("");
+  $("url").value = ""; $("start").disabled = false;
+}
+
+$("analyze").onclick = async () => {
+  const url = $("url").value.trim();
+  if (!url) return msg("Hãy dán link.", "err");
+  if (!$("agree").checked) return msg("Bạn cần tick vào ô cam kết.", "err");
+  let token = "";
+  if (USE_TS) {
+    token = window.turnstile ? turnstile.getResponse() : "";
+    if (!token) return msg("Vui lòng hoàn thành bước xác minh.", "err");
+  }
+  $("analyze").disabled = true;
+  msg("Đang phân tích link...", "info");
+  try {
+    const r = await fetch("/api/analyze", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({url, platform: PLATFORM, agree: true, cf_token: token})
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || "Có lỗi xảy ra.");
+    analysisId = j.analysis_id;
+    showPreview(j);
+    msg("");
+  } catch (e) {
+    msg(e.message, "err");
+  } finally {
+    $("analyze").disabled = false;
+    resetTs();
+  }
+};
+
+function showPreview(j) {
+  $("step1").hidden = true; $("step2").hidden = false;
+  const th = $("thumb");
+  if (j.thumbnail) {
+    th.referrerPolicy = "no-referrer";
+    th.onerror = () => { th.hidden = true; };
+    th.src = j.thumbnail; th.hidden = false;
+  } else { th.hidden = true; }
+  $("title").textContent = j.title;
+  $("meta").textContent = [j.uploader, fmtDur(j.duration)].filter(Boolean).join(" · ");
+  const box = $("opts"); box.textContent = "";
+  j.options.forEach((o, i) => {
+    const l = document.createElement("label");
+    const r = document.createElement("input");
+    r.type = "radio"; r.name = "choice"; r.value = o.id; r.checked = i === 0;
+    l.appendChild(r); l.appendChild(document.createTextNode(o.label));
+    box.appendChild(l);
+  });
+}
+
+$("start").onclick = async () => {
+  const sel = document.querySelector("input[name=choice]:checked");
+  if (!sel || !analysisId) return;
+  $("start").disabled = true; $("result").textContent = "";
+  msg("Đang xử lý, vui lòng chờ...", "info");
+  try {
+    const r = await fetch("/api/start", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({analysis_id: analysisId, choice: sel.value})
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || "Có lỗi xảy ra.");
+    poll(j.job_id);
+  } catch (e) {
+    msg(e.message, "err"); $("start").disabled = false;
+  }
+};
+
+async function poll(id) {
+  try {
+    const r = await fetch("/api/status/" + id);
+    const j = await r.json();
+    if (j.status === "done") {
+      msg("Xong! File sẽ tự xoá sau 15 phút.", "ok");
+      const a = document.createElement("a");
+      a.className = "btn"; a.style.marginTop = "12px";
+      a.href = "/api/file/" + id;
+      a.textContent = "Tải về: " + j.filename;
+      $("result").appendChild(a);
+      $("start").disabled = false;
+    } else if (j.status === "error") {
+      msg(j.message || "Không tải được.", "err");
+      $("start").disabled = false;
+    } else {
+      msg(j.status === "queued" ? "Đang xếp hàng..." : "Đang tải...", "info");
+      setTimeout(() => poll(id), 1500);
+    }
+  } catch (e) {
+    msg("Mất kết nối, hãy thử lại.", "err"); $("start").disabled = false;
+  }
+}
+
+$("again").onclick = resetAll;
+</script>
+{% endblock %}

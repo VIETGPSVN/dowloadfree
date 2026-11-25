@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Yêu cầu gỡ nội dung | {{ SITE_NAME }}{% endblock %}
+{% block desc %}Chủ sở hữu quyền có thể yêu cầu {{ SITE_NAME }} chặn link nội dung vi phạm bản quyền hoặc quyền riêng tư.{% endblock %}
+{% block content %}
+{# LƯU Ý CHO QUẢN TRỊ VIÊN: khi nhận yêu cầu hợp lệ, thêm link/tài khoản vào file blocked_urls.txt (không cần khởi động lại). #}
+<article class="legal">
+<h1>Yêu cầu gỡ nội dung</h1>
+<p class="sub">Dành cho chủ sở hữu quyền tác giả, quyền hình ảnh hoặc người đại diện hợp pháp.</p>
+
+<p>{{ SITE_NAME }} không lưu trữ video hay ảnh: mọi file chỉ tồn tại tạm thời và bị xoá sau khoảng 15 phút. Tuy nhiên, nếu bạn là chủ sở hữu và không muốn nội dung của mình có thể được tải qua Dịch vụ, chúng tôi sẵn sàng <b>chặn link hoặc tài khoản</b> đó để không thể tải thông qua {{ SITE_NAME }}.</p>
+
+<h2>Cách gửi yêu cầu</h2>
+<p>Gửi email đến <a href="mailto:{{ CONTACT_EMAIL }}">{{ CONTACT_EMAIL }}</a> với tiêu đề "Yêu cầu gỡ nội dung" và các thông tin sau:</p>
+<ol>
+  <li>Họ tên, đơn vị (nếu có) và thông tin liên hệ của bạn.</li>
+  <li>Đường link cụ thể của nội dung cần chặn trên nền tảng gốc (hoặc link trang cá nhân nếu muốn chặn toàn bộ tài khoản).</li>
+  <li>Mô tả ngắn về quyền của bạn đối với nội dung (ví dụ: bạn là tác giả, người xuất hiện trong video, hoặc đại diện của chủ sở hữu).</li>
+  <li>Bằng chứng chứng minh quyền của bạn, nếu có (ví dụ: link tài khoản chính thức, giấy tờ uỷ quyền).</li>
+  <li>Tuyên bố rằng thông tin bạn cung cấp là chính xác và bạn gửi yêu cầu với thiện chí.</li>
+</ol>
+
+<h2>Chúng tôi sẽ làm gì</h2>
+<ul>
+  <li>Xác nhận đã nhận yêu cầu và xem xét trong vòng khoảng 3 ngày làm việc.</li>
+  <li>Với yêu cầu hợp lệ, link hoặc tài khoản được thêm vào danh sách chặn; từ đó người dùng không thể phân tích hoặc tải nội dung đó qua {{ SITE_NAME }}.</li>
+  <li>Có thể liên hệ lại nếu cần bổ sung thông tin.</li>
+</ul>
+
+<h2>Lưu ý</h2>
+<p>Việc chặn trên {{ SITE_NAME }} không xoá nội dung khỏi nền tảng gốc. Để gỡ hẳn nội dung, bạn cần báo cáo trực tiếp với Facebook, Instagram, TikTok hoặc nền tảng đăng tải. Yêu cầu sai sự thật hoặc cố ý lạm dụng có thể bị từ chối.</p>
+</article>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Chính sách riêng tư | {{ SITE_NAME }}{% endblock %}
+{% block desc %}Chính sách riêng tư của {{ SITE_NAME }}: dữ liệu chúng tôi xử lý và cách bảo vệ.{% endblock %}
+{% block content %}
+{# LƯU Ý CHO QUẢN TRỊ VIÊN: đây là văn bản mẫu. Hãy chỉnh cho khớp với cách bạn thực sự vận hành (nhật ký máy chủ, quảng cáo, công cụ thống kê) và nhờ luật sư rà soát. #}
+<article class="legal">
+<h1>Chính sách riêng tư</h1>
+<p class="sub">Cập nhật lần cuối: {{ LEGAL_UPDATED }}</p>
+
+<p>Chính sách này giải thích {{ SITE_NAME }} xử lý dữ liệu của bạn như thế nào khi bạn sử dụng Dịch vụ. Chúng tôi không yêu cầu đăng ký tài khoản và không thu thập họ tên, email hay số điện thoại của người dùng.</p>
+
+<h2>1. Dữ liệu chúng tôi xử lý</h2>
+<ul>
+  <li><b>Đường link bạn dán:</b> dùng để phân tích và tải nội dung theo yêu cầu của bạn. Link không được gắn với danh tính của bạn.</li>
+  <li><b>Địa chỉ IP:</b> dùng để giới hạn số lượt yêu cầu và chống lạm dụng. Thông tin này được giữ tạm thời trong bộ nhớ máy chủ trong vài phút. Máy chủ hoặc nhà cung cấp hạ tầng có thể ghi nhật ký truy cập kỹ thuật (IP, thời gian, đường dẫn) trong thời gian ngắn để bảo mật và khắc phục sự cố.</li>
+  <li><b>Xác minh CAPTCHA:</b> chúng tôi dùng Cloudflare Turnstile để phân biệt người thật và bot. Cloudflare có thể xử lý một số tín hiệu từ trình duyệt của bạn theo chính sách riêng của họ.</li>
+</ul>
+
+<h2>2. Nội dung tải về</h2>
+<p>Chúng tôi không lưu trữ lâu dài video hay ảnh. File được tạo tạm thời để bạn tải về và tự động bị xoá sau khoảng 15 phút.</p>
+
+<h2>3. Cookie</h2>
+<p>Dịch vụ không sử dụng cookie theo dõi hoặc quảng cáo. Cloudflare Turnstile có thể sử dụng bộ nhớ cục bộ hoặc cookie cần thiết cho việc xác minh. Nếu sau này chúng tôi bổ sung quảng cáo hoặc công cụ thống kê, chính sách này sẽ được cập nhật.</p>
+
+<h2>4. Chia sẻ dữ liệu</h2>
+<p>Chúng tôi không bán dữ liệu của bạn. Dữ liệu chỉ được chia sẻ với nhà cung cấp hạ tầng (máy chủ, Cloudflare) để vận hành Dịch vụ, hoặc khi pháp luật yêu cầu.</p>
+
+<h2>5. Bảo mật</h2>
+<p>Chúng tôi áp dụng các biện pháp kỹ thuật hợp lý để bảo vệ hệ thống, nhưng không có phương thức truyền tải hay lưu trữ nào an toàn tuyệt đối.</p>
+
+<h2>6. Trẻ em</h2>
+<p>Dịch vụ không hướng đến trẻ em. Nếu bạn là phụ huynh và cho rằng con bạn đã gửi dữ liệu cho chúng tôi, vui lòng liên hệ để được hỗ trợ.</p>
+
+<h2>7. Quyền của bạn</h2>
+<p>Bạn có thể liên hệ để hỏi về dữ liệu chúng tôi đang xử lý liên quan đến bạn hoặc yêu cầu xoá dữ liệu (nếu có). Vì chúng tôi không lưu thông tin định danh, trong nhiều trường hợp chúng tôi sẽ không có dữ liệu để cung cấp.</p>
+
+<h2>8. Thay đổi chính sách</h2>
+<p>Chúng tôi có thể cập nhật chính sách này và sẽ ghi ngày cập nhật ở đầu trang.</p>
+
+<h2>9. Liên hệ</h2>
+<p>Mọi câu hỏi về quyền riêng tư, vui lòng gửi email đến <a href="mailto:{{ CONTACT_EMAIL }}">{{ CONTACT_EMAIL }}</a>.</p>
+</article>
+{% endblock %}

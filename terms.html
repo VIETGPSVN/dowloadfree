@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Điều khoản sử dụng | {{ SITE_NAME }}{% endblock %}
+{% block desc %}Điều khoản sử dụng dịch vụ {{ SITE_NAME }}.{% endblock %}
+{% block content %}
+{# LƯU Ý CHO QUẢN TRỊ VIÊN: đây là văn bản mẫu, hãy nhờ luật sư rà soát và chỉnh cho phù hợp trước khi vận hành công khai. #}
+<article class="legal">
+<h1>Điều khoản sử dụng</h1>
+<p class="sub">Cập nhật lần cuối: {{ LEGAL_UPDATED }}</p>
+
+<p>Bằng việc truy cập hoặc sử dụng {{ SITE_NAME }} ("Dịch vụ"), bạn đồng ý với các điều khoản dưới đây. Nếu không đồng ý, vui lòng ngừng sử dụng Dịch vụ.</p>
+
+<h2>1. Về Dịch vụ</h2>
+<p>{{ SITE_NAME }} là công cụ hỗ trợ người dùng tải về nội dung công khai (video, ảnh, âm thanh) từ đường link do chính người dùng cung cấp. Dịch vụ hoạt động độc lập và <b>không liên kết, không được tài trợ hay chứng thực</b> bởi Facebook, Instagram, TikTok, Meta, ByteDance hoặc bất kỳ nền tảng nào khác.</p>
+
+<h2>2. Mục đích sử dụng được phép</h2>
+<p>Bạn chỉ được sử dụng Dịch vụ để tải nội dung mà bạn là chủ sở hữu, hoặc nội dung mà bạn đã được chủ sở hữu cho phép, hoặc nội dung được phát hành theo giấy phép cho phép việc tải và sử dụng. Bạn hoàn toàn chịu trách nhiệm xác định mình có quyền tải và sử dụng nội dung hay không.</p>
+
+<h2>3. Hành vi bị cấm</h2>
+<ul>
+  <li>Tải, sao chép, đăng lại hoặc khai thác thương mại nội dung của người khác khi chưa được phép, vi phạm quyền tác giả hoặc quyền liên quan.</li>
+  <li>Xâm phạm quyền riêng tư, danh dự, nhân phẩm của người khác; tải nội dung nhằm quấy rối, theo dõi, lừa đảo hoặc làm hại người khác.</li>
+  <li>Tải hoặc phát tán nội dung vi phạm pháp luật, đặc biệt là nội dung liên quan đến xâm hại trẻ em.</li>
+  <li>Dùng công cụ tự động (bot, script) để gửi yêu cầu hàng loạt, né tránh giới hạn hoặc CAPTCHA, tấn công hay gây quá tải hệ thống.</li>
+  <li>Cố gắng truy cập nội dung riêng tư hoặc nội dung bạn không có quyền xem.</li>
+</ul>
+
+<h2>4. Quyền sở hữu trí tuệ</h2>
+<p>Nội dung tải về thuộc quyền sở hữu của tác giả hoặc chủ sở hữu hợp pháp. {{ SITE_NAME }} không sở hữu, không lưu trữ và không chịu trách nhiệm về nội dung do người dùng yêu cầu tải. Việc sử dụng Dịch vụ không chuyển giao cho bạn bất kỳ quyền nào đối với nội dung đó.</p>
+
+<h2>5. Không lưu trữ nội dung</h2>
+<p>Dịch vụ chỉ xử lý nội dung tạm thời để bạn tải về. File tạm thời được tự động xoá sau khoảng 15 phút.</p>
+
+<h2>6. Gỡ nội dung và chặn truy cập</h2>
+<p>Chủ sở hữu quyền có thể gửi yêu cầu chặn nội dung của mình tại trang <a href="/go-noi-dung">Yêu cầu gỡ nội dung</a>. Chúng tôi có quyền từ chối phục vụ, chặn link hoặc chặn người dùng vi phạm điều khoản mà không cần báo trước.</p>
+
+<h2>7. Từ chối bảo đảm</h2>
+<p>Dịch vụ được cung cấp "nguyên trạng" và "như có sẵn". Chúng tôi không bảo đảm Dịch vụ luôn hoạt động liên tục, không lỗi, hoặc luôn tải được mọi nội dung. Nền tảng nguồn có thể thay đổi bất cứ lúc nào khiến một số tính năng tạm ngừng hoạt động.</p>
+
+<h2>8. Giới hạn trách nhiệm</h2>
+<p>Trong phạm vi pháp luật cho phép, {{ SITE_NAME }} không chịu trách nhiệm về bất kỳ thiệt hại trực tiếp hay gián tiếp nào phát sinh từ việc bạn sử dụng Dịch vụ hoặc sử dụng nội dung đã tải, bao gồm các tranh chấp về bản quyền hoặc quyền riêng tư giữa bạn và bên thứ ba.</p>
+
+<h2>9. Thay đổi điều khoản</h2>
+<p>Chúng tôi có thể cập nhật điều khoản này. Phiên bản mới có hiệu lực kể từ khi đăng tải trên trang này. Việc tiếp tục sử dụng Dịch vụ nghĩa là bạn chấp nhận điều khoản đã cập nhật.</p>
+
+<h2>10. Liên hệ</h2>
+<p>Mọi thắc mắc về điều khoản, vui lòng gửi email đến <a href="mailto:{{ CONTACT_EMAIL }}">{{ CONTACT_EMAIL }}</a>.</p>
+</article>
+{% endblock %}
