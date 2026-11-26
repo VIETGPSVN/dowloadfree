@@ -39,7 +39,9 @@ ANALYSIS_TTL = 600                                         # phiên phân tích 
 RATE_LIMIT = int(os.environ.get("RATE_LIMIT", "10"))       # số lượt phân tích / IP
 RATE_WINDOW = int(os.environ.get("RATE_WINDOW", "600"))    # trong bao nhiêu giây
 MAX_CONCURRENT = int(os.environ.get("MAX_CONCURRENT", "2"))        # số tác vụ tải đồng thời
-MAX_ANALYZE_CONCURRENT = int(os.environ.get("MAX_ANALYZE_CONCURRENT", "4"))
+MAX_ANALYZE_CONCURRENT = int(os.environ.get("MAX_ANALYZE_CONCURRENT", "2"))
+TRANSCODE = os.environ.get("TRANSCODE", "0") == "1"  # mã hoá lại video khác H.264 (rất nặng CPU)
+PREFER_H264 = os.environ.get("PREFER_H264", "0") == "1"  # ưu tiên bản H.264 khi chọn định dạng (mặc định tắt)
 
 SITE_NAME = os.environ.get("SITE_NAME", "TaiVideo")
 CONTACT_EMAIL = os.environ.get("CONTACT_EMAIL", "lienhe@example.com")
@@ -96,6 +98,7 @@ LEGAL_PATHS = ["/dieu-khoan", "/chinh-sach-rieng-tu", "/lien-he", "/go-noi-dung"
 
 jobs = {}      # job_id -> thông tin tác vụ tải
 analyses = {}  # analysis_id -> kết quả phân tích
+analysis_cache = {}  # link chuẩn hoá -> (thời điểm, kết quả)
 hits = {}      # ip -> [timestamp, ...]
 lock = threading.Lock()
 slots = threading.Semaphore(MAX_CONCURRENT)
@@ -192,6 +195,8 @@ def cleanup_loop():
                 del jobs[k]
             for k in [k for k, a in analyses.items() if now - a["created"] > ANALYSIS_TTL]:
                 del analyses[k]
+            for k in [k for k, (t, _) in analysis_cache.items() if now - t > ANALYSIS_TTL]:
+                del analysis_cache[k]
             for ip in list(hits):
                 hits[ip] = [t for t in hits[ip] if now - t < RATE_WINDOW]
                 if not hits[ip]:
@@ -208,7 +213,7 @@ def analyze_ytdlp(url):
         "no_warnings": True,
         "noplaylist": True,
         "skip_download": True,
-        "socket_timeout": 20,
+        "socket_timeout": 15,
         "retries": 1,
     }
     with yt_dlp.YoutubeDL(opts) as ydl:
@@ -242,7 +247,7 @@ def analyze_ytdlp(url):
     elif len(heights) > 1:
         for i, h in enumerate(heights):
             label = f"Video {h}p (MP4)" + (" - cao nhất" if i == 0 else "")
-            options.append({"id": f"h{h}", "label": label})
+            options.append({"id": "best" if i == 0 else f"h{h}", "label": label})
     else:
         options.append({"id": "best", "label": "Video chất lượng cao nhất (MP4)"})
     if HAS_FFMPEG and not multi:
@@ -297,13 +302,23 @@ def analyze_gallery(url):
     }
 
 
+def want_gallery(url):
+    p = urlparse(url)
+    return (p.hostname or "").lower().endswith("instagram.com") or "/photo/" in p.path
+
+
 def analyze(url):
     try:
         return analyze_ytdlp(url)
     except UserError:
         raise
     except Exception:  # noqa: BLE001
-        return analyze_gallery(url)
+        if want_gallery(url):
+            return analyze_gallery(url)
+        raise UserError(
+            "Không phân tích được link này. Link có thể riêng tư, đã bị xoá "
+            "hoặc nền tảng đang chặn máy chủ. Hãy thử lại sau ít phút."
+        )
 
 
 # ---------------- Tải xuống ----------------
@@ -318,10 +333,11 @@ def try_ytdlp(url, d: Path, choice, multi):
         "retries": 2,
         "max_filesize": MAX_MB * 1024 * 1024,
         "match_filter": yt_dlp.utils.match_filter_func(f"duration <=? {MAX_DURATION}"),
-        "format_sort": ["vcodec:h264", "res", "acodec:m4a"],
     }
     if multi:
         opts["playlistend"] = 10
+    if PREFER_H264:
+        opts["format_sort"] = ["vcodec:h264", "res", "acodec:m4a"]
     if choice == "audio":
         opts["format"] = "bestaudio/best"
         opts["postprocessors"] = [{"key": "FFmpegExtractAudio", "preferredcodec": "mp3"}]
@@ -382,6 +398,8 @@ def make_compatible(path: Path) -> Path:
             return path
         ok_video = v == "h264" and pix in (None, "yuv420p")
         ok_audio = a in (None, "aac")
+        if not (ok_video and ok_audio) and not TRANSCODE:
+            return path
         cmd = ["ffmpeg", "-y", "-v", "error", "-i", str(path),
                "-map", "0:v:0", "-map", "0:a:0?", "-map_metadata", "-1"]
         if ok_video:
@@ -411,7 +429,7 @@ def run_job(job_id, rec, choice):
                 try_gallerydl(rec["url"], d)
             else:
                 try_ytdlp(rec["url"], d, choice, rec["multi"])
-            if choice != "audio" and rec["kind"] == "ytdlp":
+            if TRANSCODE and choice != "audio" and rec["kind"] == "ytdlp":
                 for f in [f for f in d.rglob("*") if f.is_file()]:
                     make_compatible(f)
             files = [f for f in d.rglob("*") if f.is_file()]
@@ -530,16 +548,22 @@ def api_analyze():
         return err("Xác minh CAPTCHA thất bại, hãy thử lại.", 400)
     if is_blocked(url):
         return err("Nội dung này đã bị chặn theo yêu cầu của chủ sở hữu.", 451)
-    if not analyze_slots.acquire(timeout=10):
-        return err("Hệ thống đang bận, vui lòng thử lại sau ít phút.", 503)
-    try:
-        rec = analyze(url)
-    except UserError as e:
-        return err(str(e), 422)
-    except Exception:  # noqa: BLE001
-        return err("Không phân tích được link này. Hãy kiểm tra link công khai và thử lại.", 422)
-    finally:
-        analyze_slots.release()
+    ckey = norm_url(url)
+    cached = analysis_cache.get(ckey)
+    if cached and time.time() - cached[0] < ANALYSIS_TTL:
+        rec = dict(cached[1])
+    else:
+        if not analyze_slots.acquire(timeout=20):
+            return err("Hệ thống đang bận, vui lòng thử lại sau ít phút.", 503)
+        try:
+            rec = analyze(url)
+        except UserError as e:
+            return err(str(e), 422)
+        except Exception:  # noqa: BLE001
+            return err("Không phân tích được link này. Hãy kiểm tra link công khai và thử lại.", 422)
+        finally:
+            analyze_slots.release()
+        analysis_cache[ckey] = (time.time(), dict(rec))
 
     if is_blocked(rec["canonical"]):
         return err("Nội dung này đã bị chặn theo yêu cầu của chủ sở hữu.", 451)
